@@ -27,7 +27,17 @@ class Template(object):
 	        # publicar imagen
 		self.pub_img = rospy.Publisher("img_with_detections", Image, queue_size = 1)
 		
-		# publiar return de la función (cambiar mas adelante. nombre del topico: detections)
+		# publicar return de la función (cambiar mas adelante. nombre del topico: detections)
+		# return: sea N el numero de detecciones. entonces: se retornan Corners, Im ID
+		# Corners: vector<pair<int,int>> de N puntos
+		# ImID: vector<int> de N enteros que describen el ID de los arucos detectados.
+		# formato: msg[0][i] = corners[i].x
+		# msg[1][i] = corners[i].y
+		# msg[2][i] = Id[i]
+		
+		self.pub_detections = rospy.Publisher("detections", Float32MultiArray, queue_size = 1)
+		
+		
 		#self.pub_mask = rospy.Publisher("mascara", Image, queue_size = 1)
 
 	def procesar_img(self, msg):
@@ -62,7 +72,17 @@ class Template(object):
 			for i in range(len(imID)):
 			    cv2.putText(image, imID[i].astype(str)[0], corners[i][0][0].astype(int), cv2.FONT_HERSHEY_PLAIN, 5, (255,255, 255))
 
-
+		# llenar matriz de detecciones
+		N = len(imID)
+		detections = np.zeros(9, N)
+		
+		# detections[0][i] = coordenada x primera esquina
+		# detections[1][i] = coordenada y primera esquina
+		# detections[2][i] = coordenada x segunda esquina... hasta la cuarta (detections[7][i] cuarta esquina coordenada y)
+		for i in range(N):
+			for j in range(8):
+				detections[j][i] = corners[i][j]
+			detections[8][i] = int(imID[i])
 		
 		# ==================================
 		
@@ -70,6 +90,9 @@ class Template(object):
 		# publicamos la imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
 		self.pub_img.publish(msg)
+		
+		# publicamos el return del detectmarkers
+		self.pub_detections.publish(detections)
 
 
 def main():
@@ -84,4 +107,3 @@ def main():
 
 if __name__ =='__main__':
 	main()
-
