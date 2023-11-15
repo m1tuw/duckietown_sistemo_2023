@@ -11,17 +11,17 @@ class Template(object):
 		super(Template, self).__init__()
 		self.args = args
 
-		# (poner aquí nodos a los que me suscribo)
+		# (poner aquí tópicos a los que me suscribo)
 		# suscripción: matriz con detecciones.
 		self.sub_detections = rospy.Subscriber("detections", Float32MultiArray, self.detect_pose)
-		
+
 	        # Publicar imagen(es)
 	        # (poner aquí tópicos donde publico)
-	        
+
 	        # publicar tupla con posición y rotación en radianes (point 3d)
 	        # se publica un punto (x, y, theta) con theta el ángulo de rotación y (x,y) la posición respecto al origen
-		self.pub_pose = rospy.Publisher("img_with_detections", Point, queue_size = 1)		
-		
+		self.pub_pose = rospy.Publisher("img_with_detections", Point, queue_size = 1)
+
 
 	def detect_pose(self, msg):
 		detections = msg
@@ -29,14 +29,14 @@ class Template(object):
 		# rearmar vector corners
 		corners = []
 		imID = []
-		
+
 		for i in range(N):
 			for k in range(4):
 				x = detections[k][i]
 				y = detections[k+1][i]
 				corners.append([x, y])
 			imID.append(detections[8][i])
-		
+
 
 
 def main():
