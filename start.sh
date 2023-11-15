@@ -2,7 +2,7 @@
 ROS_MASTER_URI="http://duckiebot.local:11311"
 
 # Detección de arucos
-python arucodet.py &
+python3 arucodet.py &
 
 # Detección de poses de los aruco
-python posedet.py &
+python3 posedet.py &
