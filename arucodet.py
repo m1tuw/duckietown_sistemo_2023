@@ -5,7 +5,7 @@
 #!/usr/bin/env python
 
 import rospy #importar ros para python
-from std_msgs.msg import String, Int32,Float32 # importar mensajes de ROS tipo String y tipo Int32
+from std_msgs.msg import String, Int32,Float32,Float32MultiArray # importar mensajes de ROS tipo String y tipo Int32
 from geometry_msgs.msg import Twist, Point # importar mensajes de ROS tipo geometry / Twist
 from sensor_msgs.msg import Image # importar mensajes de ROS tipo Image
 import cv2
@@ -21,10 +21,10 @@ class Template(object):
 		# (poner aquí tópicos los que me suscribo)
 		self.Sub_Cam = rospy.Subscriber("/duckiebot/camera_node/image/raw", Image, self.procesar_img)
 
-	        # Publicar imagen(es)
-	        # (poner aquí tópicos donde publico)
+			# Publicar imagen(es)
+			# (poner aquí tópicos donde publico)
 
-	        # publicar imagen
+			# publicar imagen
 		self.pub_img = rospy.Publisher("img_with_detections", Image, queue_size = 1)
 
 		# publicar return de la función (cambiar mas adelante. nombre del topico: detections)
@@ -68,9 +68,12 @@ class Template(object):
 		# Our operations on the frame come here
 		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		(corners, imID, rejected) = cv2.aruco.detectMarkers(gray, dic, parameters = par)
-		if type(imID) != type(None):
-			for i in range(len(imID)):
-			    cv2.putText(image, imID[i].astype(str)[0], corners[i][0][0].astype(int), cv2.FONT_HERSHEY_PLAIN, 5, (255,255, 255))
+
+		if type(imID) == type(None):
+			return
+
+		for i in range(len(imID)):
+			cv2.putText(image, imID[i].astype(str)[0], corners[i][0][0].astype(int), cv2.FONT_HERSHEY_PLAIN, 5, (255,255, 255))
 
 		# llenar matriz de detecciones
 		N = len(imID)

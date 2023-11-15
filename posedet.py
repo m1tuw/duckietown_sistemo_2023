@@ -1,5 +1,5 @@
 import rospy #importar ros para python
-from std_msgs.msg import String, Int32,Float32 # importar mensajes de ROS tipo String y tipo Int32
+from std_msgs.msg import String, Int32,Float32,Float32MultiArray # importar mensajes de ROS tipo String y tipo Int32
 from geometry_msgs.msg import Twist, Point # importar mensajes de ROS tipo geometry / Twist
 from sensor_msgs.msg import Image # importar mensajes de ROS tipo Image
 import cv2 # abstenerse de usar import cv2 as cv hay metodos que tienen cv2 como parte de su nombre y no se cambian D:
