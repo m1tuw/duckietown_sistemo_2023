@@ -32,10 +32,9 @@ class Template(object):
 
 		for i in range(N):
 			for k in range(4):
-				x = detections[k][i]
 				y = detections[k+1][i]
-				corners.append([x, y])
-			imID.append(detections[8][i])
+				corners.append(detections[i][j])
+			imID.append(detections[i][5][0])
 
 
 

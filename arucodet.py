@@ -1,4 +1,4 @@
-# resumen: tomar imagen de la camara y publica la imágen con sus detecciones respectivas en el tópico img_with_detections, y la lista de puntos en el formato (x_1,y_1,...,x_4,y_4,ID) (coordenadas en pixeles) en el tópico detections.
+# resumen: tomar imagen de la camara y publica la imágen con sus detecciones respectivas en el tópico img_with_detections, y la lista de puntos en el formato ((x_1,y_1),...,(x_4,y_4),(ID,0)) (coordenadas en pixeles) en el tópico detections.
 # pendiente: ver que hacer con la información q se publica (por ejemplo: todos los returns de la función)
 # posible solución: publicar en varios tópicos diferentes o publicar todo solo en uno, preguntar (mas que nada por el tipo del mensaje)
 
@@ -70,6 +70,8 @@ class Template(object):
 		(corners, imID, rejected) = cv2.aruco.detectMarkers(gray, dic, parameters = par)
 
 		if type(imID) == type(None):
+			msg = bridge.cv2_to_imgmsg(image, "bgr8")
+			self.pub_img.publish(msg)
 			return
 
 		for i in range(len(imID)):
@@ -77,15 +79,15 @@ class Template(object):
 
 		# llenar matriz de detecciones
 		N = len(imID)
-		detections = np.zeros(9, N)
+		detections = np.zeros((N, 5, 2))
 
-		# detections[0][i] = coordenada x primera esquina
-		# detections[1][i] = coordenada y primera esquina
-		# detections[2][i] = coordenada x segunda esquina... hasta la cuarta (detections[7][i] cuarta esquina coordenada y)
+		# detections[j][i] = coordenadas x,y primera esquina
+		print(corners)
 		for i in range(N):
-			for j in range(8):
-				detections[j][i] = corners[i][j]
-			detections[8][i] = int(imID[i])
+			for j in range(4):
+				print(corners[i][0][j])
+				detections[i][j] = corners[i][0][j]
+			detections[i][4][0] = float(imID[i])
 
 		# ==================================
 
@@ -95,7 +97,7 @@ class Template(object):
 		self.pub_img.publish(msg)
 
 		# publicamos el return del detectmarkers
-		self.pub_detections.publish(detections)
+		self.pub_detections.publish((N, 5, 2), detections)
 
 
 def main():
