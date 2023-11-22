@@ -1,5 +1,5 @@
 import rospy #importar ros para python
-from std_msgs.msg import String, Int32,Float32,Float32MultiArray # importar mensajes de ROS tipo String y tipo Int32
+from std_msgs.msg import String, Int32,Float32,Float32MultiArray,Int32MultiArray # importar mensajes de ROS tipo String y tipo Int32
 from geometry_msgs.msg import Twist, Point # importar mensajes de ROS tipo geometry / Twist
 from sensor_msgs.msg import Image # importar mensajes de ROS tipo Image
 import cv2 # abstenerse de usar import cv2 as cv hay metodos que tienen cv2 como parte de su nombre y no se cambian D:
@@ -13,7 +13,11 @@ class Template(object):
 
 		# (poner aquí tópicos a los que me suscribo)
 		# suscripción: matriz con detecciones.
-		self.sub_detections = rospy.Subscriber("detections", Float32MultiArray, self.detect_pose)
+		#self.sub_detections = rospy.Subscriber("detections", Float32MultiArray, self.detect_pose)
+		self.sub_corners = rospy.Subscriber("corners", String, self.detect_pose)
+		self.sub_ids = rospy.Subscriber("ids", String, self.detect_ids)
+		
+		self.ids = []
 
 	        # Publicar imagen(es)
 	        # (poner aquí tópicos donde publico)
@@ -21,20 +25,49 @@ class Template(object):
 	        # publicar tupla con posición y rotación en radianes (point 3d)
 	        # se publica un punto (x, y, theta) con theta el ángulo de rotación y (x,y) la posición respecto al origen
 		self.pub_pose = rospy.Publisher("img_with_detections", Point, queue_size = 1)
+		
+		
+	def detect_ids(self, msg):
+		self.ids = msg
 
 
 	def detect_pose(self, msg):
-		detections = msg
-		N = len(detections[0])
+		#detections = msg
+		#N = len(detections[0])
 		# rearmar vector corners
-		corners = []
-		imID = []
-
+		
+		# pose[i][0] = posicion en X
+		# pose[i][1] = posicion en Y
+		# pose[i][2] = rotación en radianes
+		
+		# rebuild corners
+		cstr = msg.data.split()	
+		N = int(cstr[0])
+		N = min(N, 1)
+		
+		print(len(cstr))
+		corners = [[[]]*N]
 		for i in range(N):
-			for k in range(4):
-				y = detections[k+1][i]
-				corners.append(detections[i][j])
-			imID.append(detections[i][5][0])
+			for j in range(4):
+				A = np.zeros(2)
+				x = float(cstr[1 + N*i + 2*j])
+				y = float(cstr[1 + N*i + 2*j + 1])
+				A[0] = x
+				A[1] = y
+				corners[i][0].append(A)
+		
+		# hardcode matriz
+		cameraMatrix = [[109.244443, 0.360267, 158.945421], [0.000000, 110.007361, 117.624169], [0.000000, 0.000000, 1.000000]]
+		distCoeffs = [-0.041032, -0.024147, 0.145470, -0.088792]
+		
+		h = 0.01 # half square length
+		
+		objectPoints = [[-h, h, 0],[h, h, 0],[h, -h, 0],[-h, -h, 0]]
+		imagePoints = corners[0]
+		
+		(retval, rvec, tvec)	cv2.SOLVEPNP_IPPE_SQUARE(objectPoints, cameraMatrix, distCoeffs, flags = 0)
+		
+		
 
 
 

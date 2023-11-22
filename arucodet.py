@@ -1,11 +1,12 @@
+#!/usr/bin/env python
 # resumen: tomar imagen de la camara y publica la imágen con sus detecciones respectivas en el tópico img_with_detections, y la lista de puntos en el formato ((x_1,y_1),...,(x_4,y_4),(ID,0)) (coordenadas en pixeles) en el tópico detections.
 # pendiente: ver que hacer con la información q se publica (por ejemplo: todos los returns de la función)
 # posible solución: publicar en varios tópicos diferentes o publicar todo solo en uno, preguntar (mas que nada por el tipo del mensaje)
 
-#!/usr/bin/env python
+
 
 import rospy #importar ros para python
-from std_msgs.msg import String, Int32,Float32,Float32MultiArray # importar mensajes de ROS tipo String y tipo Int32
+from std_msgs.msg import String, Int32,Float32,Float32MultiArray,Int32MultiArray,MultiArrayDimension # importar mensajes de ROS tipo String y tipo Int32
 from geometry_msgs.msg import Twist, Point # importar mensajes de ROS tipo geometry / Twist
 from sensor_msgs.msg import Image # importar mensajes de ROS tipo Image
 import cv2
@@ -35,7 +36,11 @@ class Template(object):
 		# msg[1][i] = corners[i].y
 		# msg[2][i] = Id[i]
 
-		self.pub_detections = rospy.Publisher("detections", Float32MultiArray, queue_size = 1)
+		#self.pub_detections = rospy.Publisher("detections", Float32MultiArray, queue_size = 1)
+		
+		self.pub_corners = rospy.Publisher("corners", String, queue_size = 10)
+		self.pub_ids = rospy.Publisher("ids", String, queue_size = 10)
+		
 
 
 		#self.pub_mask = rospy.Publisher("mascara", Image, queue_size = 1)
@@ -59,8 +64,7 @@ class Template(object):
 		# ==================================
 
 		dic = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_100)
-		par = cv2.aruco.DetectorParameters()
-
+		par = cv2.aruco.DetectorParameters_create()
 
 		#cap = cv2.VideoCapture(0)
 
@@ -75,33 +79,49 @@ class Template(object):
 			return
 
 		for i in range(len(imID)):
-			cv2.putText(image, imID[i].astype(str)[0], corners[i][0][0].astype(int), cv2.FONT_HERSHEY_PLAIN, 5, (255,255, 255))
+			cv2.putText(image, imID[i].astype(str)[0], (corners[i][0][0][0], corners[i][0][0][1]), cv2.FONT_HERSHEY_PLAIN, 5, (255,255,255))
 
 		# llenar matriz de detecciones
 		N = len(imID)
 		detections = np.zeros((N, 5, 2))
 
 		# detections[j][i] = coordenadas x,y primera esquina
+		'''
 		print(corners)
 		for i in range(N):
 			for j in range(4):
 				print(corners[i][0][j])
 				detections[i][j] = corners[i][0][j]
 			detections[i][4][0] = float(imID[i])
-
+		'''
 		# ==================================
 
 		# Publicar imagen final
 		# publicamos la imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
+		
+		corners_ros = String()
+		ids_ros = String()
+		
+		for i in range(N):
+			ids_ros.data += str(imID[i][0])+" "
+			
+		corners_ros.data += str(N)+" "
+		
+		for i in range(N):
+			c = ""
+			for k in range(4):
+				c += str(corners[i][0][k][0]) + " "
+				c += str(corners[i][0][k][1]) + " "
+			corners_ros.data += c
+		
+		self.pub_corners.publish(corners_ros)
+		self.pub_ids.publish(ids_ros)
 		self.pub_img.publish(msg)
-
-		# publicamos el return del detectmarkers
-		self.pub_detections.publish((N, 5, 2), detections)
 
 
 def main():
-	rospy.init_node('test3') #creacion y registro del nodo!
+	rospy.init_node('aruco_det_node') #creacion y registro del nodo!
 
 	obj = Template('args') # Crea un objeto del tipo Template, cuya definicion se encuentra arriba
 
