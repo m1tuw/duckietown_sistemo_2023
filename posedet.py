@@ -59,7 +59,7 @@ class Template(object):
 		cameraMatrix = [[109.244443, 0.360267, 158.945421], [0.000000, 110.007361, 117.624169], [0.000000, 0.000000, 1.000000]]
 		distCoeffs = [-0.041032, -0.024147, 0.145470, -0.088792]
 		
-		h = 0.01 # half square length
+		h = 10.0 # half square length
 		
 		objectPoints = [[-h, h, 0],[h, h, 0],[h, -h, 0],[-h, -h, 0]]
 		objectPoints = np.array(objectPoints)
@@ -71,11 +71,38 @@ class Template(object):
 		
 		retval, rvec, tvec = cv2.solvePnP(objectPoints, corners[0][0], cameraMatrix, distCoeffs, False, cv2.SOLVEPNP_IPPE_SQUARE)
 		
+		rvec *= 180/3.1415926535897932384626433832795028841971
+		
+		'''
+		print("rotation: ")
+		print(rvec)
+		print("translation: ")
+		print(tvec)
+		'''
+		
+		#rmat = cv2.Rodrigues(rvec)
+		
+		#print("rotation matrix: ")
+		#print(rmat)
+		
+		id = int(self.ids.data.split()[0])
+		print(id)
+		
+		coords = {}
+		for i in range(11):
+			coords[i] = [0, 60*i, 0]
+			
+		currentPos = np.zeros(3)
+		
+		for i in range(3):
+			currentPos[i] = coords[id][i] + tvec[i]
+		
+		print(currentPos)
+			
 		
 		
 		
-
-
+		
 
 def main():
 	rospy.init_node('test3') #creacion y registro del nodo!
