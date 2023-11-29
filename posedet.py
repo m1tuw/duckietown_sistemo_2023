@@ -45,7 +45,6 @@ class Template(object):
 		N = int(cstr[0])
 		N = min(N, 1)
 		
-		print(len(cstr))
 		corners = [[[]]*N]
 		for i in range(N):
 			for j in range(4):
@@ -63,9 +62,16 @@ class Template(object):
 		h = 0.01 # half square length
 		
 		objectPoints = [[-h, h, 0],[h, h, 0],[h, -h, 0],[-h, -h, 0]]
-		imagePoints = corners[0]
+		objectPoints = np.array(objectPoints)
 		
-		(retval, rvec, tvec)	cv2.SOLVEPNP_IPPE_SQUARE(objectPoints, cameraMatrix, distCoeffs, flags = 0)
+		corners = np.array(corners)
+		
+		cameraMatrix = np.array(cameraMatrix)
+		distCoeffs = np.array(distCoeffs)
+		
+		retval, rvec, tvec = cv2.solvePnP(objectPoints, corners[0][0], cameraMatrix, distCoeffs, False, cv2.SOLVEPNP_IPPE_SQUARE)
+		
+		
 		
 		
 
