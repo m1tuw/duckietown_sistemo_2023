@@ -24,7 +24,7 @@ class Template(object):
 
 	        # publicar tupla con posición y rotación en radianes (point 3d)
 	        # se publica un punto (x, y, theta) con theta el ángulo de rotación y (x,y) la posición respecto al origen
-		self.pub_pose = rospy.Publisher("img_with_detections", Point, queue_size = 1)
+		self.pub_pose = rospy.Publisher("pose", Point, queue_size = 1)
 		
 		
 	def detect_ids(self, msg):
@@ -71,7 +71,7 @@ class Template(object):
 		
 		retval, rvec, tvec = cv2.solvePnP(objectPoints, corners[0][0], cameraMatrix, distCoeffs, False, cv2.SOLVEPNP_IPPE_SQUARE)
 		
-		rvec *= 180/3.1415926535897932384626433832795028841971
+		#rvec *= 180/3.1415926535897932384626433832795028841971
 		
 		'''
 		print("rotation: ")
@@ -90,16 +90,21 @@ class Template(object):
 		
 		coords = {}
 		for i in range(11):
-			coords[i] = [0, 60*i, 0]
+			coords[i] = [0, 80*i, 0]
 			
 		currentPos = np.zeros(3)
 		
 		for i in range(3):
 			currentPos[i] = coords[id][i] + tvec[i]
+
+		pose = Point()
+		pose.x = currentPos[0]
+		pose.y = currentPos[1]
+		pose.z = rvec[0][0]
 		
 		print(currentPos)
 			
-		
+		pub_pose.publish(pose)
 		
 		
 		
