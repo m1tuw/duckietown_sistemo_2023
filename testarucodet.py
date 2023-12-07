@@ -132,13 +132,8 @@ class Template(object):
 				corners[i][0].append(A)
 		
 		# hardcode matriz
-		cameraMatrix = [[109.244443, 0.360267, 158.945421], [0.000000, 110.007361, 117.624169], [0.000000, 0.000000, 1.000000]]
-		distCoeffs = [-0.041032, -0.024147, 0.145470, -0.088792]
-		
-		# test
-		#cameraMatrix = [[125.42424224236133, 0.7467639631235231, 158.53203494166937], [0.0, 123.76363110820478, 119.10559733872347], [0.0, 0.0, 1.0]]
-
-		#distCoeffs = [-0.34376330470701005, 1.2938313866758033, -0.3306849867250663, -0.290744885377089]
+		cameraMatrix = [[301.360315, 0.000000, 151.013685], [0.000000, 301.949166, 115.746894], [0.000000, 0.000000, 1.000000]]
+		distCoeffs = [0.097030, -0.226118, -0.001924, -0.003349]
 
 		
 		h = 10.0 # half square length
@@ -151,24 +146,46 @@ class Template(object):
 		cameraMatrix = np.array(cameraMatrix)
 		distCoeffs = np.array(distCoeffs)
 		
-		retval, rvec, tvec = cv2.solvePnP(objectPoints, corners[0][0], cameraMatrix, distCoeffs, False, cv2.SOLVEPNP_IPPE_SQUARE)
+		#retval, rvec, tvec = cv2.solvePnP(objectPoints, corners[0][0], cameraMatrix, distCoeffs, False, cv2.SOLVEPNP_IPPE_SQUARE)
+		retval, rvec, tvec = cv2.solvePnP(objectPoints, corners[0][0], cameraMatrix, distCoeffs, False)
 		
 		# para debugear
 		#rvecdeb = rvec * 180/3.1415926535897932384626433832795028841971
 		
 		id = int(ids_ros.data.split()[0])
-		print(id)
+		#print(id)
 		
 		coords = {}
-		for i in range(13):
-			coords[i] = [0, 60*i, 0]
+		for i in range(16):
+			coords[i] = [110*(i%4), 110*(i//4), 0]
 		
-		theta = rvec[0]
+		#print(rvec)
 		
 		rot = np.zeros([2, 2])
+		fix = np.zeros([2, 2])
 		
-		rot[0][0] = np.cos(theta)
-		rot[1][0] = np.sin(theta)
+		fix[0][0] = 0
+		fix[1][0] = 1
+		fix[0][1] = -rot[1][0]
+		fix[1][1] = rot[0][0]
+		
+		p1 = np.zeros(2)
+		p2 = np.zeros(2)
+		
+		p1[0] = corners[0][0][0][0]
+		p1[1] = corners[0][0][0][1]
+		p2[0] = corners[0][0][1][0]
+		p2[1] = corners[0][0][1][1]	
+		
+		disp = np.zeros(2) # short for displacement
+		disp[0] = p2[0] - p1[0]
+		disp[1] = p2[1] - p1[1]
+		
+		theta = -np.arctan2(disp[1], disp[0]) # por alguna razon se resta en vez de sumar xd
+		#print(theta*180/np.pi) 		
+		
+		rot[0][0] = np.cos(-theta)
+		rot[1][0] = np.sin(-theta)
 		rot[0][1] = -rot[1][0]
 		rot[1][1] = rot[0][0]
 		
@@ -176,13 +193,11 @@ class Template(object):
 		
 		for i in range(2):
 			currentPos[i] = coords[id][i] + np.matmul(rot,[tvec[0], tvec[1]])[i]
-			
-		#print("rotation vec")
-		#print(rvec)
-		#print("angle0: "+str(theta*180/np.pi))
-		#print("angle1: "+str(rvec[1]*180/np.pi))
-		#print(currentPos)
-		#print(np.matmul(rot,[tvec[0], tvec[1]]))
+		
+		print(np.matmul(rot,[tvec[0], tvec[1]]))
+		print(currentPos)
+		print(id)
+		print(coords[id])
 		
 		# ===================
 		
@@ -194,7 +209,10 @@ class Template(object):
 		color = (0, 0, 255)
 		thickness = 2
 		image = cv2.arrowedLine(image, start_point, end_point, color, thickness, tipLength = 0.5)
-
+		for i in range(4): 
+			p = corners[0][0][i]
+			image = cv2.circle(image, (int(p[0]), int(p[1])), 10, (0, 80*i, 0), 5)
+	
 		# Publicar imagen final
 		# publicamos la imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
