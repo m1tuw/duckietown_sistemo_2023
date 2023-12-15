@@ -39,8 +39,7 @@ class Template(object):
 
 		#self.pub_detections = rospy.Publisher("detections", Float32MultiArray, queue_size = 1)
 		
-		self.pub_corners = rospy.Publisher("corners", String, queue_size = 10)
-		self.pub_ids = rospy.Publisher("ids", String, queue_size = 10)
+		self.pub_coords = rospy.Publisher("coords", String, queue_size = 10)
 		
 
 
@@ -176,7 +175,7 @@ class Template(object):
 		p1[1] = corners[0][0][0][1]
 		p2[0] = corners[0][0][1][0]
 		p2[1] = corners[0][0][1][1]	
-		
+		coords
 		disp = np.zeros(2) # short for displacement
 		disp[0] = p2[0] - p1[0]
 		disp[1] = p2[1] - p1[1]
@@ -219,6 +218,14 @@ class Template(object):
 			
 		self.pub_img.publish(msg)
 		
+		coord_msg = String()
+		
+		for i in range(2):
+			coord_msg.data += str(currentPos[i])+" "
+			
+		coord_msg.data += str(theta)
+		
+		self.pub_coords.publish(coord_msg)
 		
 
 
