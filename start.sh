@@ -1,8 +1,7 @@
 # Setear URI de ROS en caso de correrlo remotamente
-ROS_MASTER_URI="http://duckiebot.local:11311"
+export ROS_MASTER_URI="http://duckiebot.local:11311"
+export ROS_IP="10.42.0.1"
 
-# Detección de arucos
-python3 arucodet.py &
-
-# Detección de poses de los aruco
-python3 posedet.py &
+# abrir archivos
+python3 testarucodet.py &
+python3 movement.py
