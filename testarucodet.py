@@ -40,8 +40,6 @@ class Template(object):
 		#self.pub_detections = rospy.Publisher("detections", Float32MultiArray, queue_size = 1)
 		
 		self.pub_coords = rospy.Publisher("coords", String, queue_size = 10)
-		
-
 
 		#self.pub_mask = rospy.Publisher("mascara", Image, queue_size = 1)
 
@@ -130,10 +128,13 @@ class Template(object):
 				A[1] = y
 				corners[i][0].append(A)
 		
-		# hardcode matriz
+		# hardcode matriz (pinhole)
 		cameraMatrix = [[301.360315, 0.000000, 151.013685], [0.000000, 301.949166, 115.746894], [0.000000, 0.000000, 1.000000]]
 		distCoeffs = [0.097030, -0.226118, -0.001924, -0.003349]
-
+			
+		# fisheye
+		#cameraMatrix = [[109.244443, 0.360267, 158.945421], [0.000000, 110.007361, 117.624169], [0.000000, 0.000000, 1.000000]]
+		#distCoeffs = [-0.041032, -0.024147, 0.145470, -0.088792]
 		
 		h = 10.0 # half square length
 		
@@ -192,11 +193,6 @@ class Template(object):
 		
 		for i in range(2):
 			currentPos[i] = coords[id][i] + np.matmul(rot,[tvec[0], tvec[1]])[i]
-		
-		print(np.matmul(rot,[tvec[0], tvec[1]]))
-		print(currentPos)
-		print(id)
-		print(coords[id])
 		
 		# ===================
 		
